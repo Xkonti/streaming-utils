@@ -1,154 +1,77 @@
-import std/[cmdline, os, strformat, strutils, tables, times, terminal]
+import std/[cmdline, os, strformat, strutils, tables, times, terminal, unicode]
+import buffer
+import constants
+import colors
+import time
 
-const digit0 = [
- " ██████ ",
- "██  ████",
- "██ ██ ██",
- "████  ██",
- " ██████ "
-]
-
-const digit1 = [
- " ██",
- "███",
- " ██",
- " ██",
- " ██"
-]
-
-const digit2 = [
-  "██████ ",
-  "     ██",
-  " █████ ",
-  "██     ",
-  "███████"
-]
-
-const digit3 = [
-  "██████ ",
-  "     ██",
-  " █████ ",
-  "     ██",
-  "██████ "
-]
-
-const digit4 = [
-  "██   ██",
-  "██   ██",
-  "███████",
-  "     ██",
-  "     ██"
-]
-
-const digit5 = [
-  "███████",
-  "██     ",
-  "███████",
-  "     ██",
-  "███████"
-]
-
-const digit6 = [
-  " ██████ ",
-  "██      ",
-  "███████ ",
-  "██    ██",
-  " ██████ "
-]
-
-const digit7 = [
-  "███████",
-  "     ██",
-  "    ██ ",
-  "   ██  ",
-  "   ██  "
-]
-
-const digit8 = [
-  " █████ ",
-  "██   ██",
-  " █████ ",
-  "██   ██",
-  " █████ "
-]
-
-const digit9 = [
-  " █████ ",
-  "██   ██",
-  " ██████",
-  "     ██",
-  " █████ "
-]
-
-const digitColon = [
-  "   ",
-  "██ ",
-  "   ",
-  "██ ",
-  "   "
-]
-
-# Ascii generator https://patorjk.com/software/taag/
-const msgStream = """
-███████ ████████ ██████  ███████  █████  ███    ███     ██     ██ ██ ██      ██          ██████  ███████ ███████ ██    ██ ███    ███ ███████     ██ ███    ██    
-██         ██    ██   ██ ██      ██   ██ ████  ████     ██     ██ ██ ██      ██          ██   ██ ██      ██      ██    ██ ████  ████ ██          ██ ████   ██ ██ 
-███████    ██    ██████  █████   ███████ ██ ████ ██     ██  █  ██ ██ ██      ██          ██████  █████   ███████ ██    ██ ██ ████ ██ █████       ██ ██ ██  ██    
-     ██    ██    ██   ██ ██      ██   ██ ██  ██  ██     ██ ███ ██ ██ ██      ██          ██   ██ ██           ██ ██    ██ ██  ██  ██ ██          ██ ██  ██ ██ ██ 
-███████    ██    ██   ██ ███████ ██   ██ ██      ██      ███ ███  ██ ███████ ███████     ██   ██ ███████ ███████  ██████  ██      ██ ███████     ██ ██   ████    """
-
-
-const digits = { '0': digit0, '1': digit1, '2': digit2, '3': digit3, '4': digit4, '5': digit5, '6': digit6, '7': digit7, '8': digit8, '9': digit9, ':': digitColon }.toTable
-
-const
-  FG: string = "\e[38;2;"
-  BG: string = "\e[48;2;"
-
-proc hexColorToEscapeCode(hexStr: string, backGround: bool = false): string =
-  let hex: uint = fromHex[uint](hexStr[1..<7])
-
-  let r = hex.int shr 16 and 0xff
-  let g = hex.int shr 8 and 0xff
-  let b = hex.int and 0xff
-  
-  if backGround : result = BG
-  else: result = FG
-
-  result &= fmt"{r};{g};{b}m"
-
-stdout.hideCursor()
-proc displayDigits(text: string, line: int): string =
-  for digit in text:
-    result &= "  "
-    result &= digits[digit][line]
-
-let params = commandLineParams()
-let requestedMinutes = if params.len > 0: params[0].parseInt() else: 5
-
+const timeWidth = (4 * digitWidth) + colonWidth + (4 * digitSpacing)
+var buf = Buffer2D[timeWidth, digitHegiht, Rune]()
 const message = hexColorToEscapeCode("#FFD921") & msgStream
-let startTime = now()
-let countdownTime = initDuration(seconds = requestedMinutes * 60)
-var elapsedTime = initDuration()
+const characterDelay = 50
 
 
-proc displayMessage(message: string, minutes: int, seconds: int) =
+proc renderDigits(timeString: string, buf: var Buffer2D[timeWidth, digitHegiht, Rune]) =
+  var i = 0
+  for line in 0..<digitHegiht:
+    for digit in timeString:
+      if i mod timeWidth != 0:
+        for _ in 0..<digitSpacing:
+          buf.set(i, Rune ' ')
+          inc i
+      let segment = digits[digit][line].toRunes()
+      for rune in segment:
+        buf.set(i, rune)
+        inc i
+
+
+proc displayMessage(message: string) =
   # Move cursor to the beginning of the line and erase the current line
   stdout.setCursorPos 0, 0
   stdout.styledWriteLine message
 
-  for line in 0..4:
-    stdout.setCursorPos 0, line + 7
-    stdout.styledWriteLine colors["purple"] & displayDigits(fmt"{minutes:02}:{seconds:02}", line)
+
+# START PROGRAM
+
+stdout.hideCursor()
+
+let params = commandLineParams()
+let requestedMinutes = if params.len > 0: params[0].parseInt() else: 5
+
+let startTime = now()
+let countdownTime = initDuration(seconds = requestedMinutes * 60)
+var elapsedTime = initDuration()
+
+stdout.eraseScreen()
+displayMessage message
+var colorIndex = -1
 
 while countdownTime > elapsedTime:
-  sleep(1000)
-  stdout.eraseScreen()
-  let currentTime = now()
-  elapsedTime = currentTime - startTime
-  let timeLeft = countdownTime - elapsedTime
-  let totalSeconds = timeLeft.inSeconds
-  let minutes = totalSeconds div 60
-  let seconds = totalSeconds mod 60
-  displayMessage message, minutes, seconds
+  let (minutes, seconds) = calcTime(startTime, countdownTime)
+
+  # Color selection
+  colorIndex = (colorIndex + 1) mod len(palette)
+  let color = palette[colorIndex]
+
+  var newBuf = buf
+  renderDigits fmt"{minutes:02}:{seconds:02}", newBuf
+  let diff = buf.diff(newBuf)
+  buf = newBuf
+
+  var timeElapsed = 0
+
+  const xOffset = 6
+  const yOffset = 12
+
+  for (x, y, rune) in diff:
+    let posX = x + xOffset
+    let posY = y + yOffset
+    stdout.setCursorPos posX, posY
+    stdout.styledWriteLine color & $rune
+    timeElapsed += characterDelay
+    sleep characterDelay
+
+  sleep 250 - timeElapsed
+
 
 stdout.eraseScreen()
 stdout.setCursorPos 0, 3
