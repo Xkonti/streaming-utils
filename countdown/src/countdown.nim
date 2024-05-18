@@ -88,9 +88,32 @@ const digitColon = [
   "   "
 ]
 
-const colors = { "blue": "\x1b[38;2;94;129;172m", "green": "\x1b[38;2;163;190;140m", "purple": "\x1b[38;2;180;142;173m", "orange": "\x1b[38;2;235;203;139m", "red": "\x1b[38;2;191;97;106m", "white": "\x1b[38;2;236;239;244m"}.toTable
+# Ascii generator https://patorjk.com/software/taag/
+const msgStream = """
+███████ ████████ ██████  ███████  █████  ███    ███     ██     ██ ██ ██      ██          ██████  ███████ ███████ ██    ██ ███    ███ ███████     ██ ███    ██    
+██         ██    ██   ██ ██      ██   ██ ████  ████     ██     ██ ██ ██      ██          ██   ██ ██      ██      ██    ██ ████  ████ ██          ██ ████   ██ ██ 
+███████    ██    ██████  █████   ███████ ██ ████ ██     ██  █  ██ ██ ██      ██          ██████  █████   ███████ ██    ██ ██ ████ ██ █████       ██ ██ ██  ██    
+     ██    ██    ██   ██ ██      ██   ██ ██  ██  ██     ██ ███ ██ ██ ██      ██          ██   ██ ██           ██ ██    ██ ██  ██  ██ ██          ██ ██  ██ ██ ██ 
+███████    ██    ██   ██ ███████ ██   ██ ██      ██      ███ ███  ██ ███████ ███████     ██   ██ ███████ ███████  ██████  ██      ██ ███████     ██ ██   ████    """
+
 
 const digits = { '0': digit0, '1': digit1, '2': digit2, '3': digit3, '4': digit4, '5': digit5, '6': digit6, '7': digit7, '8': digit8, '9': digit9, ':': digitColon }.toTable
+
+const
+  FG: string = "\e[38;2;"
+  BG: string = "\e[48;2;"
+
+proc hexColorToEscapeCode(hexStr: string, backGround: bool = false): string =
+  let hex: uint = fromHex[uint](hexStr[1..<7])
+
+  let r = hex.int shr 16 and 0xff
+  let g = hex.int shr 8 and 0xff
+  let b = hex.int and 0xff
+  
+  if backGround : result = BG
+  else: result = FG
+
+  result &= fmt"{r};{g};{b}m"
 
 stdout.hideCursor()
 proc displayDigits(text: string, line: int): string =
@@ -101,7 +124,7 @@ proc displayDigits(text: string, line: int): string =
 let params = commandLineParams()
 let requestedMinutes = if params.len > 0: params[0].parseInt() else: 5
 
-const message = colors["blue"] & "Ben will be back in:"
+const message = hexColorToEscapeCode("#FFD921") & msgStream
 let startTime = now()
 let countdownTime = initDuration(seconds = requestedMinutes * 60)
 var elapsedTime = initDuration()
@@ -113,7 +136,7 @@ proc displayMessage(message: string, minutes: int, seconds: int) =
   stdout.styledWriteLine message
 
   for line in 0..4:
-    stdout.setCursorPos 0, line + 2
+    stdout.setCursorPos 0, line + 7
     stdout.styledWriteLine colors["purple"] & displayDigits(fmt"{minutes:02}:{seconds:02}", line)
 
 while countdownTime > elapsedTime:
