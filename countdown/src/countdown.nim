@@ -5,9 +5,11 @@ import colors
 import time
 
 const timeWidth = (4 * digitWidth) + colonWidth + (4 * digitSpacing)
+
 var buf = Buffer2D[timeWidth, digitHegiht, Rune]()
+var diff: DiffSeq[Rune] = @[]
+
 const message = hexColorToEscapeCode("#FFD921") & msgStream
-const characterDelay = 50
 
 
 proc renderDigits(timeString: string, buf: var Buffer2D[timeWidth, digitHegiht, Rune]) =
@@ -16,11 +18,11 @@ proc renderDigits(timeString: string, buf: var Buffer2D[timeWidth, digitHegiht, 
     for digit in timeString:
       if i mod timeWidth != 0:
         for _ in 0..<digitSpacing:
-          buf.set(i, Rune ' ')
+          buf.set(i, Rune ' ', diff)
           inc i
       let segment = digits[digit][line].toRunes()
       for rune in segment:
-        buf.set(i, rune)
+        buf.set(i, rune, diff)
         inc i
 
 
@@ -52,10 +54,9 @@ while countdownTime > elapsedTime:
   colorIndex = (colorIndex + 1) mod len(palette)
   let color = palette[colorIndex]
 
-  var newBuf = buf
-  renderDigits fmt"{minutes:02}:{seconds:02}", newBuf
-  let diff = buf.diff(newBuf)
-  buf = newBuf
+  renderDigits fmt"{minutes:02}:{seconds:02}", buf
+
+  let characterDelay = 1000 div diff.len
 
   var timeElapsed = 0
 
@@ -70,7 +71,8 @@ while countdownTime > elapsedTime:
     timeElapsed += characterDelay
     sleep characterDelay
 
-  sleep 250 - timeElapsed
+  diff = @[]
+  sleep 1000 - timeElapsed
 
 
 stdout.eraseScreen()
