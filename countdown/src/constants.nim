@@ -106,6 +106,6 @@ const msgStream* = """
 
 
 const digitWidth* = 7
-const digitHegiht* = 5
+const digitHeight* = 5
 const colonWidth* = 2
 const digitSpacing* = 1

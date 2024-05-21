@@ -1,36 +1,57 @@
+import std/[terminal, unicode]
+
 type
-  Buffer2D*[Width: static[int], Height: static[int], TCell] = object
-    data*: array[Width*Height, TCell]
+  Pixel* = object
+    fc*: string
+    bc*: string
+    style*: Style
+    rune*: Rune
 
-  DiffEntry*[TCell] = tuple[x: int, y: int, value: TCell]
-  DiffSeq*[TCell] = seq[DiffEntry[TCell]]
+  Buffer2D* = object
+    data*: seq[Pixel]
+    w, h: int
 
-proc width*[Width: static[int], Height: static[int], TCell](self: Buffer2D[Width, Height, TCell]): int =
-  Width
+  DiffEntry* = tuple[x: int, y: int, value: Pixel]
+  DiffSeq* = seq[DiffEntry]
 
-proc height*[Width: static[int], Height: static[int], TCell](self: Buffer2D[Width, Height, TCell]): int =
-  Height
+proc initBuffer2D*(width, height: int): Buffer2D {.inline.} =
+  stdout.hideCursor()
+  result = Buffer2D(w: width, h: height)
+  result.data = newSeq[Pixel](width * height)
 
-proc posToIndex*[Width: static[int], Height: static[int], TCell](self: Buffer2D[Width, Height, TCell], x, y: int): int {.inline.} =
-  y * Width + x
+proc width*(self: Buffer2D): int =
+  self.w
 
-proc indexToPos*[Width: static[int], Height: static[int], TCell](self: Buffer2D[Width, Height, TCell], index: int): tuple[x: int, y: int] {.inline.} =
-  (index mod Width, index div Width)
+proc height*(self: Buffer2D): int =
+  self.h
 
-proc get*[Width: static[int], Height: static[int], TCell](self: Buffer2D[Width, Height, TCell], x, y: int): TCell =
+proc posToIndex*(self: Buffer2D, x, y: int): int {.inline.} =
+  y * self.w + x
+
+proc indexToPos*(self: Buffer2D, index: int): tuple[x: int, y: int] {.inline.} =
+  (index mod self.w, index div self.w)
+
+proc get*(self: Buffer2D, x, y: int): Pixel =
   self.data[self.posToIndex(x, y)]
 
-proc set*[Width: static[int], Height: static[int], TCell](self: var Buffer2D[Width, Height, TCell], x, y: int, value: TCell, diffSeq: var DiffSeq) =
+proc set*(self: var Buffer2D, x, y: int, value: Rune, diffSeq: var DiffSeq) =
+  let index = self.posToIndex(x, y)
+  let oldValue = self.data[index].rune
+  if oldValue != value:
+    self.data[index].rune = value
+    diffSeq.add((x, y, self.data[index]))
+
+proc set*(self: var Buffer2D, x, y: int, value: Pixel, diffSeq: var DiffSeq) =
   let index = self.posToIndex(x, y)
   let oldValue = self.data[index]
   if oldValue != value:
     self.data[index] = value
     diffSeq.add((x, y, value))
 
-proc get*[Width: static[int], Height: static[int], TCell](self: Buffer2D[Width, Height, TCell], index: int): TCell =
+proc get*(self: Buffer2D, index: int): Pixel =
   self.data[index]
 
-proc set*[Width: static[int], Height: static[int], TCell](self: var Buffer2D[Width, Height, TCell], index: int, value: TCell, diffSeq: var DiffSeq) =
+proc set*(self: var Buffer2D, index: int, value: Pixel, diffSeq: var DiffSeq) =
   let oldValue = self.data[index]
   if oldValue != value:
     self.data[index] = value

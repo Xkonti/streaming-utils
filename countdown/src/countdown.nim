@@ -1,40 +1,27 @@
-import std/[cmdline, os, strformat, strutils, tables, times, terminal, unicode]
-import buffer
+import std/[cmdline, os, strformat, strutils, tables, times]
 import constants
 import colors
 import time
+import terminal
 
-const timeWidth = (4 * digitWidth) + colonWidth + (4 * digitSpacing)
-
-var buf = Buffer2D[timeWidth, digitHegiht, Rune]()
-var diff: DiffSeq[Rune] = @[]
-
-const message = hexColorToEscapeCode("#FFD921") & msgStream
+const message = msgStream
 
 
-proc renderDigits(timeString: string, buf: var Buffer2D[timeWidth, digitHegiht, Rune]) =
+proc renderDigits(timeString: string) =
   var i = 0
-  for line in 0..<digitHegiht:
-    for digit in timeString:
-      if i mod timeWidth != 0:
-        for _ in 0..<digitSpacing:
-          buf.set(i, Rune ' ', diff)
-          inc i
-      let segment = digits[digit][line].toRunes()
-      for rune in segment:
-        buf.set(i, rune, diff)
-        inc i
+  for digit in timeString:
+    drawGlyph(i * 9, 12, digits[digit])
+    inc i
 
 
-proc displayMessage(message: string) =
-  # Move cursor to the beginning of the line and erase the current line
-  stdout.setCursorPos 0, 0
-  stdout.styledWriteLine message
+# proc displayMessage(message: string) =
+#   # Move cursor to the beginning of the line and erase the current line
+#   stdout.setCursorPos 0, 0
+#   stdout.styledWriteLine message
 
 
 # START PROGRAM
 
-stdout.hideCursor()
 
 let params = commandLineParams()
 let requestedMinutes = if params.len > 0: params[0].parseInt() else: 5
@@ -43,8 +30,7 @@ let startTime = now()
 let countdownTime = initDuration(seconds = requestedMinutes * 60)
 var elapsedTime = initDuration()
 
-stdout.eraseScreen()
-displayMessage message
+# displayMessage message
 var colorIndex = -1
 
 while countdownTime > elapsedTime:
@@ -53,29 +39,19 @@ while countdownTime > elapsedTime:
   # Color selection
   colorIndex = (colorIndex + 1) mod len(palette)
   let color = palette[colorIndex]
+  setFColor(color)
 
-  renderDigits fmt"{minutes:02}:{seconds:02}", buf
+  renderDigits fmt"{minutes:02}:{seconds:02}"
 
-  let characterDelay = 1000 div diff.len
+  # let characterDelay = 1000 div diff.len
 
   var timeElapsed = 0
 
-  const xOffset = 6
-  const yOffset = 12
-
-  for (x, y, rune) in diff:
-    let posX = x + xOffset
-    let posY = y + yOffset
-    stdout.setCursorPos posX, posY
-    stdout.styledWriteLine color & $rune
-    timeElapsed += characterDelay
-    sleep characterDelay
-
-  diff = @[]
+  render()
   sleep 1000 - timeElapsed
 
 
-stdout.eraseScreen()
-stdout.setCursorPos 0, 3
-stdout.styledWriteLine "Ben is supposed to be back NOW!"
-stdout.setCursorPos 0, 10
+# stdout.eraseScreen()
+# stdout.setCursorPos 0, 3
+# stdout.styledWriteLine "Ben is supposed to be back NOW!"
+# stdout.setCursorPos 0, 10
