@@ -1,11 +1,19 @@
-import std/[terminal, unicode]
+import std/[colors, terminal, unicode]
 
 type
+  PixelFlag* = enum
+    HasFgColor
+    HasBgColor
+    HasStyle
+    HasRune
+  PixelFlags* = set[PixelFlag]
+
   Pixel* = object
-    fc*: string
-    bc*: string
+    fc*: Color
+    bc*: Color
     style*: Style
     rune*: Rune
+    flags*: PixelFlags
 
   Buffer2D* = object
     data*: seq[Pixel]

@@ -4,9 +4,6 @@ import colors
 import time
 import terminal
 
-const message = msgStream
-
-
 proc renderDigits(timeString: string) =
   var i = 0
   for digit in timeString:
@@ -14,10 +11,11 @@ proc renderDigits(timeString: string) =
     inc i
 
 
-# proc displayMessage(message: string) =
-#   # Move cursor to the beginning of the line and erase the current line
-#   stdout.setCursorPos 0, 0
-#   stdout.styledWriteLine message
+proc displayMessage(message: string) =
+  # Move cursor to the beginning of the line and erase the current line
+  let lines = message.split("\n")
+  for i, line in lines:
+    write(0, i, line)
 
 
 # START PROGRAM
@@ -25,12 +23,15 @@ proc renderDigits(timeString: string) =
 
 let params = commandLineParams()
 let requestedMinutes = if params.len > 0: params[0].parseInt() else: 5
+let message = if params.len > 1 and params[1] == "start":
+    msgStreamStart
+  else:
+    msgStreamResume
 
 let startTime = now()
 let countdownTime = initDuration(seconds = requestedMinutes * 60)
 var elapsedTime = initDuration()
 
-# displayMessage message
 var colorIndex = -1
 
 while countdownTime > elapsedTime:
@@ -41,14 +42,11 @@ while countdownTime > elapsedTime:
   let color = palette[colorIndex]
   setFColor(color)
 
+  displayMessage message
   renderDigits fmt"{minutes:02}:{seconds:02}"
-
-  # let characterDelay = 1000 div diff.len
-
-  var timeElapsed = 0
-
+  
   render()
-  sleep 1000 - timeElapsed
+  sleep 1000
 
 
 # stdout.eraseScreen()
