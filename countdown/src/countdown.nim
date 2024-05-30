@@ -3,6 +3,7 @@ import constants
 import colors
 import time
 import terminal
+import commonTypes
 
 proc renderDigits(timeString: string) =
   var i = 0
@@ -15,7 +16,7 @@ proc displayMessage(message: string) =
   # Move cursor to the beginning of the line and erase the current line
   let lines = message.split("\n")
   for i, line in lines:
-    write(0, i, line)
+    write(Pos(x: 0, y: i), line)
 
 
 # START PROGRAM
@@ -34,22 +35,32 @@ var elapsedTime = initDuration()
 
 var colorIndex = -1
 
-while countdownTime > elapsedTime:
-  let (minutes, seconds) = calcTime(startTime, countdownTime)
+proc runProgram() =
+  hideCursor()
+  defer: showCursor()
 
-  # Color selection
-  colorIndex = (colorIndex + 1) mod len(palette)
-  let color = palette[colorIndex]
-  setFColor(color)
+  while countdownTime > elapsedTime:
+    let (minutes, seconds) = calcTime(startTime, countdownTime)
 
-  displayMessage message
-  renderDigits fmt"{minutes:02}:{seconds:02}"
-  
-  render()
-  sleep 1000
+    # Color selection
+    colorIndex = (colorIndex + 1) mod len(palette)
+    let bgColor = palette[(colorIndex+(len(palette) div 2)) mod len(palette)]
+    setBColor(bgColor)
+    drawFilledRect(Pos(x: 15, y: 15), Pos(x: 80, y: 24))
+
+    let textColor = palette[colorIndex]
+    transparentBColor()
+    setFColor(textColor)
+    displayMessage message
+    renderDigits fmt"{minutes:02}:{seconds:02}"
+    
+    render()
+    sleep 1000
 
 
-# stdout.eraseScreen()
-# stdout.setCursorPos 0, 3
-# stdout.styledWriteLine "Ben is supposed to be back NOW!"
-# stdout.setCursorPos 0, 10
+  # stdout.eraseScreen()
+  # stdout.setCursorPos 0, 3
+  # stdout.styledWriteLine "Ben is supposed to be back NOW!"
+  # stdout.setCursorPos 0, 10
+
+runProgram()

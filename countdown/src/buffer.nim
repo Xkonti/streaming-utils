@@ -2,10 +2,8 @@ import std/[colors, terminal, unicode]
 
 type
   PixelFlag* = enum
-    HasFgColor
     HasBgColor
     HasStyle
-    HasRune
   PixelFlags* = set[PixelFlag]
 
   Pixel* = object
@@ -23,7 +21,6 @@ type
   DiffSeq* = seq[DiffEntry]
 
 proc initBuffer2D*(width, height: int): Buffer2D {.inline.} =
-  stdout.hideCursor()
   result = Buffer2D(w: width, h: height)
   result.data = newSeq[Pixel](width * height)
 
@@ -42,19 +39,40 @@ proc indexToPos*(self: Buffer2D, index: int): tuple[x: int, y: int] {.inline.} =
 proc get*(self: Buffer2D, x, y: int): Pixel =
   self.data[self.posToIndex(x, y)]
 
-proc set*(self: var Buffer2D, x, y: int, value: Rune, diffSeq: var DiffSeq) =
-  let index = self.posToIndex(x, y)
-  let oldValue = self.data[index].rune
-  if oldValue != value:
-    self.data[index].rune = value
-    diffSeq.add((x, y, self.data[index]))
-
 proc set*(self: var Buffer2D, x, y: int, value: Pixel, diffSeq: var DiffSeq) =
   let index = self.posToIndex(x, y)
   let oldValue = self.data[index]
-  if oldValue != value:
-    self.data[index] = value
-    diffSeq.add((x, y, value))
+
+  # Detect changes
+  var changed = false
+  if oldValue.rune != value.rune:
+    changed = true
+  elif oldValue.fc != value.fc:
+    changed = true
+  elif (HasBgColor in value.flags) and oldValue.bc != value.bc:
+    changed = true
+  elif (HasStyle in oldValue.flags) and oldValue.style != value.style:
+    changed = true
+
+  if not changed: return
+
+  # Backgorund
+  if HasBgColor in value.flags:
+    self.data[index].bc = value.bc
+
+  # Foreground
+  self.data[index].fc = value.fc
+  self.data[index].rune = value.rune
+
+  # Style
+  if HasStyle in value.flags:
+    self.data[index].flags.incl HasStyle
+    self.data[index].style = value.style
+  else:
+    self.data[index].flags.excl HasStyle
+
+  # Add to diff sequence
+  diffSeq.add((x, y, self.data[index]))
 
 proc get*(self: Buffer2D, index: int): Pixel =
   self.data[index]
