@@ -39,6 +39,8 @@ proc runProgram() =
   hideCursor()
   defer: showCursor()
 
+  render()
+
   while countdownTime > elapsedTime:
     let (minutes, seconds) = calcTime(startTime, countdownTime)
 
@@ -46,7 +48,7 @@ proc runProgram() =
     colorIndex = (colorIndex + 1) mod len(palette)
     let bgColor = palette[(colorIndex+(len(palette) div 2)) mod len(palette)]
     setBColor(bgColor)
-    drawFilledRect(Pos(x: 15, y: 15), Pos(x: 80, y: 24))
+    drawFilledRect(Pos(x: 15, y: 5), Pos(x: 80, y: 24))
 
     let textColor = palette[colorIndex]
     transparentBColor()

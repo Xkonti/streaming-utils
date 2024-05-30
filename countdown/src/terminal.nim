@@ -1,9 +1,9 @@
-import std/[colors, os, terminal, times, unicode]
+import std/[colors, terminal, unicode]
 import buffer
 import commonTypes
 
 var size: tuple[w: int, h: int] = (0, 0)
-var buf: Buffer2D
+var buf: Buffer2D = initBuffer2D(0, 0)
 var diff: DiffSeq = @[]
 
 var currentFColor: Color
@@ -11,13 +11,6 @@ var currentBColor: Color
 var currentStyle: Style = styleBright
 var currentPixelFlags: PixelFlags = {}
 var previousPixel = Pixel()
-
-# Initialization code
-
-size = terminalSize()
-buf = initBuffer2D(size.w, size.h)
-stdout.eraseScreen()
-stdout.resetAttributes()
 
 proc hideCursor*() =
   stdout.hideCursor()
@@ -41,6 +34,14 @@ proc resetStyle*() {.inline.} =
 proc setStyle*(style: Style) {.inline.} =
   currentStyle = style
   currentPixelFlags.incl HasStyle
+
+proc applyBuffer*(pos: Pos, buffer: Buffer2D) =
+  let maxX = min(size.w, buffer.width)
+  let maxY = min(size.h, buffer.height)
+  for y in 0 ..< maxY:
+    for x in 0 ..< maxX:
+      let pixel = buffer.get(x, y)
+      buf.set(pos.x + x, pos.y + y, pixel, diff)
 
 proc write*(pos: Pos, text: string) =
   let runes = text.toRunes()
@@ -75,9 +76,27 @@ proc drawGlyph*(x, y: int, glyph: openArray[string]) =
         flags: currentPixelFlags)
       buf.set(x + iX, y + iY, pixel, diff)
 
+proc updateTerminalSize*() =
+  let newSize = terminalSize()
+  if newSize == size: return
 
+  # Set new size
+  size = newSize
+
+  # Init new buffer
+  let oldBuf = buf
+  buf = initBuffer2D(size.w, size.h)
+
+  # Clear screen to black
+  stdout.write ansiBackgroundColorCode(colBlack)
+  stdout.eraseScreen()
+
+  # Copy old buffer to new buffer
+  applyBuffer(Pos.zero, oldBuf)
 
 proc render*() =
+  updateTerminalSize()
+
   let diffCopy = diff
   diff = @[]
 
@@ -108,3 +127,8 @@ proc render*() =
     previousPixel = pixel
 
   stdout.flushFile()
+
+
+# Initialization code
+# updateTerminalSize()
+stdout.resetAttributes()
