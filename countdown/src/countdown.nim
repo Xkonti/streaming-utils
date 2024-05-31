@@ -1,22 +1,29 @@
-import std/[cmdline, os, strformat, strutils, tables, times]
+import std/[cmdline, os, strformat, strutils, times]
 import constants
 import colors
 import time
 import terminal
 import commonTypes
+import glyphs
 
 proc renderDigits(timeString: string) =
-  var i = 0
-  for digit in timeString:
-    drawGlyph(i * 9, 12, digits[digit])
-    inc i
-
+  drawGlyphs(Pos.new(2, 14), Shady, timeString)
 
 proc displayMessage(message: string) =
   # Move cursor to the beginning of the line and erase the current line
+  const font = Shady
+  const fontHeight = getFontHeight(font)
   let lines = message.split("\n")
   for i, line in lines:
-    write(Pos(x: 0, y: i), line)
+    drawGlyphs(Pos(x: 0, y: i * (fontHeight + 1)), font, line)
+
+proc displaySubMessage(pos: Pos,message: string) =
+  # Move cursor to the beginning of the line and erase the current line
+  const font = Tmplr
+  const fontHeight = getFontHeight(font)
+  let lines = message.split("\n")
+  for i, line in lines:
+    drawGlyphs(Pos(x: pos.x, y: pos.y + (i * (fontHeight + 1))), font, line)
 
 
 # START PROGRAM
@@ -55,6 +62,7 @@ proc runProgram() =
     setFColor(textColor)
     displayMessage message
     renderDigits fmt"{minutes:02}:{seconds:02}"
+    displaySubMessage(Pos(x: 0, y: 24), fmt"Or he won't be in {minutes:02}:{seconds:02}...")
     
     render()
     sleep 1000

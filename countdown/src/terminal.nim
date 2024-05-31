@@ -1,6 +1,7 @@
 import std/[colors, terminal, unicode]
 import buffer
 import commonTypes
+import glyphs
 
 var size: tuple[w: int, h: int] = (0, 0)
 var buf: Buffer2D = initBuffer2D(0, 0)
@@ -43,11 +44,13 @@ proc applyBuffer*(pos: Pos, buffer: Buffer2D) =
       let pixel = buffer.get(x, y)
       buf.set(pos.x + x, pos.y + y, pixel, diff)
 
-proc write*(pos: Pos, text: string) =
-  let runes = text.toRunes()
+proc writeRunes*(pos: Pos, runes: openArray[Rune]) =
   for iX, r in runes:
     let pixel = Pixel(fc: currentFColor, bc: currentBColor, style: currentStyle, rune: r, flags: currentPixelFlags)
     buf.set(pos.x + iX, pos.y, pixel, diff)
+
+proc write*(pos: Pos, text: string) =
+  writeRunes(pos, text.toRunes())
 
 proc write*(pos: Pos, strings: varargs[string, `$`]) =
   var iX = 0
@@ -78,6 +81,17 @@ proc drawGlyph*(x, y: int, glyph: openArray[string]) =
         rune: r,
         flags: currentPixelFlags)
       buf.set(x + iX, y + iY, pixel, diff)
+
+proc drawGlyph*(pos: Pos, glyph: Glyph) =
+  for segment in glyph.segments:
+    writeRunes(pos + segment.pos, segment.text)
+
+proc drawGlyphs*(pos: Pos, font: GlyphFont, text: string) =
+  var x = pos.x
+  for character in text.toRunes():
+    let glyph = getGlyph(character, font)
+    drawGlyph(Pos.new(x, pos.y), glyph)
+    inc x, glyph.width + 1
 
 proc updateTerminalSize*() =
   let newSize = terminalSize()
@@ -133,5 +147,4 @@ proc render*() =
 
 
 # Initialization code
-# updateTerminalSize()
 stdout.resetAttributes()
