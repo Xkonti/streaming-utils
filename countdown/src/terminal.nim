@@ -59,8 +59,11 @@ proc write*(pos: Pos, strings: varargs[string, `$`]) =
       inc iX
 
 proc drawFilledRect*(startPos, endPos: Pos) =
-  for x in startPos.x .. endPos.x:
-    for y in startPos.y .. endPos.y:
+  let sPos = startPos.clamp(size)
+  let ePos = endPos.clamp(size)
+
+  for x in sPos.x .. ePos.x:
+    for y in sPos.y .. ePos.y:
       let pixel = Pixel(fc: currentFColor, bc: currentBColor, style: currentStyle, rune: ' '.Rune, flags: currentPixelFlags)
       buf.set(x, y, pixel, diff)
 

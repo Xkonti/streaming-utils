@@ -13,3 +13,6 @@ proc `-`*(a, b: Pos): Pos =
 
 proc `+`*(a, b: Pos): Pos =
   Pos(x: a.x + b.x, y: a.y + b.y)
+
+proc clamp*(self: Pos, size: tuple[w, h: int]): Pos =
+  Pos(x: min(size.w, max(0, self.x)), y: min(size.h, max(0, self.y)))
