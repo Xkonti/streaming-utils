@@ -6,8 +6,10 @@
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
+    "@elysiajs/cors": "^1.0.2",
     "elysia": "latest",
-    "comfy.js": "^1.1.16"
+    "comfy.js": "^1.1.16",
+    "youtubei.js": "^9.4.0"
   },
   "devDependencies": {
     "bun-types": "latest"

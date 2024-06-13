@@ -1,23 +1,17 @@
 import { Elysia } from "elysia";
 import { initTwitch } from "./chat/twitch";
-import { Subscriber, subscribe } from "./chat/subscribers";
-import { Message } from "./chat/messages";
+import {initYoutube} from "./chat/youtube";
+import { addChatEndpoints } from "./chat/endpoints";
+import { cors } from '@elysiajs/cors'
 
 const app = new Elysia()
-  .get("/", async () => {
-    let messages: Message[] = []
-    const subscriber: Subscriber = {
-      onMessages: async (msgs: Message[]) => {
-        messages = msgs
-        return true;
-      },
-    }
-    await subscribe(subscriber)
-    return messages;
-  })
-  .listen(3000);
+    .use(cors())
+    .get("/", () => "Oh, hi there!");
+addChatEndpoints(app);
+app.listen(3000);
 
 initTwitch();
+await initYoutube();
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`

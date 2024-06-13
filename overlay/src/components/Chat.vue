@@ -3,17 +3,23 @@
     <div class="chatbox q-pa-xs">
       <q-chat-message
         v-for="message in messages"
-        :key="`${message.name} - ${message.timestamp}`"
+        :key="message.id"
         :name="message.name"
-        avatar="https://cdn.quasar.dev/img/avatar1.jpg"
-        :text="[message.text]"
-        :stamp="`${message.secondsAgo} seconds ago`"
-        :sent="!message.onRight"
-        bg-color="amber-7"
+        :text="[`${message.name}: ${message.text}`]"
+        :sent="true"
+        bg-color="white"
         class="chat-message"
+        style="font-size: 1.5rem;"
+        size="10"
       >
         <template v-slot:avatar>
-          <q-icon name="mdi-twitch" size="2.4rem" />
+          <q-avatar
+            font-size="2.4rem"
+            text-color="white"
+            :color="message.source === 'tw' ? 'deep-purple-6' : 'red'"
+            :icon="message.source === 'tw' ? 'mdi-twitch' : 'mdi-youtube'"
+            class="q-message-avatar--sent"
+          />
         </template>
       </q-chat-message>
       <div ref="chatboxend" />
@@ -22,131 +28,79 @@
 </template>
 
 <script setup>
-import {computed, onBeforeUnmount, onMounted, ref, watch} from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import {api} from "boot/axios.js";
 
 defineOptions({
-  name: 'TwitchChat'
-})
-
-import ComfyJS from 'comfy.js'
+  name: "TwitchChat",
+});
 
 // 2k screen resolution
-const resX = 2160
-const resY = 1440
+const resX = 2160;
+const resY = 1440;
 
 const chatboxend = ref(null);
 const scrollToBottom = () => {
   if (chatboxend.value) {
-    console.log( "Scrolling to bottom" )
+    console.log("Scrolling to bottom");
     chatboxend.value.scrollIntoView({ behavior: "smooth" });
   } else {
-    console.log( "No chatbox" )
+    console.log("No chatbox");
   }
 };
 
-
-const maxMessageLifetime = 1000 * 60 * 5 // 5 minutes
+const maxMessageLifetime = 1000 * 60 * 5; // 5 minutes
 
 /**
  * @type {Ref<UnwrapRef<*[{
+ *   id: string,
+ *   source: "tw" | "yt",
  *   name: string,
  *   text: string,
  *   timestamp: number,
- *   date: string,
- *   onRight: boolean,
  * }]>>}
  */
-const rawMessages = ref([
-  {
-    name: "Hardcoded 1",
-    text: "Hello",
-    timestamp: Date.now() - 4000,
-    correctedTime: Date.now() - 4000,
-  },
-  {
-    name: "Hardcoded 1",
-    text: "Hello",
-    timestamp: Date.now() - 4000,
-    correctedTime: Date.now() - 4000,
-  },
-  {
-    name: "Hardcoded 1",
-    text: "Hello",
-    timestamp: Date.now() - 4000,
-    correctedTime: Date.now() - 4000,
-  },
-  {
-    name: "Hardcoded 1",
-    text: "Hello",
-    timestamp: Date.now() - 4000,
-    correctedTime: Date.now() - 4000,
-  },
-  {
-    name: "Hardcoded 1",
-    text: "Hello",
-    timestamp: Date.now() - 4000,
-    correctedTime: Date.now() - 4000,
-  },
-  {
-    name: "Hardcoded 1",
-    text: "Hello",
-    timestamp: Date.now() - 4000,
-    correctedTime: Date.now() - 4000,
-  },
-  {
-    name: "Hardcoded 1",
-    text: "Hello",
-    timestamp: Date.now() - 4000,
-    correctedTime: Date.now() - 4000,
-  },
-  {
-    name: "Hardcoded 1",
-    text: "Hello",
-    timestamp: Date.now() - 4000,
-    correctedTime: Date.now() - 4000,
-  },
-  {
-    name: "Hardcoded 1",
-    text: "Hello",
-    timestamp: Date.now() - 4000,
-    correctedTime: Date.now() - 4000,
-  },
-  {
-    name: "Hardcoded 1",
-    text: "Hello",
-    timestamp: Date.now() - 4000,
-    correctedTime: Date.now() - 4000,
-  },
-  {
-    name: "Hardcoded 1",
-    text: "Hello",
-    timestamp: Date.now() - 4000,
-    correctedTime: Date.now() - 4000,
-  },
-])
+const rawMessages = ref([]);
 const currentTime = ref(Date.now());
 
 const messages = computed(() => {
   return rawMessages.value.map((msg) => {
     return {
       ...msg,
-      secondsAgo: Math.floor((currentTime.value - msg.correctedTime) / 1000)
-    }
-  })
-})
+      secondsAgo: Math.floor((currentTime.value - msg.timestamp) / 1000),
+    };
+  });
+});
 
-const refreshMessages = () => {
+const updateMessaged = async () => {
+  // Request new messages from the server and update the list
+  const response = await api.get("chat/messages/all")
+  if (response.status !== 200) {
+    console.error("Error fetching messages", response.data);
+  } else {
+    // TODO: When retrieving only small portions
+    // Apply the new messages to the list making sure to not add duplicates
+    // let newMessages = response.data
+    //   .filter((newMessage) => {
+    //     const oldMessage = rawMessages.value.find((rawMessage) => rawMessage.id === newMessage.id);
+    //     return !oldMessage;
+    //   });
+    // rawMessages.value = [...rawMessages.value, ...newMessages];
+
+    rawMessages.value = response.data;
+  }
+
   // Remove messages that are older than maxMessageLifetime
-  rawMessages.value = rawMessages.value.filter((msg) =>
-    currentTime.value - msg.correctedTime <= maxMessageLifetime
-  )
+  rawMessages.value = rawMessages.value.filter(
+    (msg) => currentTime.value - msg.timestamp <= maxMessageLifetime,
+  );
   // Update the current time to refresh the messages timestamps
   currentTime.value = Date.now();
 };
 
 let interval;
 onMounted(() => {
-  interval = setInterval(refreshMessages, 500);
+  interval = setInterval(updateMessaged, 1000);
 });
 
 onBeforeUnmount(() => {
@@ -158,34 +112,8 @@ watch(
   () => {
     scrollToBottom();
   },
-  { deep: true }
+  { deep: true },
 );
-
-
-ComfyJS.onChat = ( user, message, flags, self, extra ) => {
-  console.log( { user, message, flags, self, extra } )
-
-  // Convert the timestamp from a string to a number
-  const timestamp = Number( extra.timestamp )
-
-  // Get the last message
-  const lastMessage = messages.value[messages.value.length - 1]
-  let onRight = lastMessage ? lastMessage.onRight : true
-  if (lastMessage && lastMessage.name !== user) {
-    onRight = !onRight
-  }
-
-  rawMessages.value.push({
-    name: user,
-    text: message,
-    timestamp: timestamp,
-    correctedTime: currentTime.value,
-    onRight,
-  })
-}
-
-ComfyJS.Init("XkontiTech")
-
 </script>
 
 <style lang="scss">
