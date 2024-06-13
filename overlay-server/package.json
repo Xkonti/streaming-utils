@@ -6,7 +6,8 @@
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
-    "elysia": "latest"
+    "elysia": "latest",
+    "comfy.js": "^1.1.16"
   },
   "devDependencies": {
     "bun-types": "latest"
