@@ -11,7 +11,7 @@ addChatEndpoints(app);
 app.listen(3000);
 
 initTwitch();
-await initYoutube();
+await initYoutube('ZGsO3BB-0rM');
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
