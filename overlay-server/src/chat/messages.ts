@@ -4,7 +4,6 @@ import { updateMessageSubscribers } from "./subscribers";
  * A message without an any specific identifiers nor a source
  */
 export interface BareMessage {
-  source: "tw" | "yt";
   name: string;
   text: string;
 }
@@ -31,69 +30,19 @@ export type MockMessageHandlerRequester = (onMockMessage: (mockMessage: BareMess
  */
 let messages: Message[] = [
   {
-    source: "tw",
-    name: "Hardcoded 1",
-    text: "Hello",
-  },
-  {
     source: "yt",
-    name: "Hardcoded 1",
-    text: "Hello",
-  },
-  {
-    source: "tw",
-    name: "Hardcoded 1",
-    text: "Hello",
-  },
-  {
-    source: "tw",
-    name: "Hardcoded 1",
-    text: "Hello",
-  },
-  {
-    source: "yt",
-    name: "Hardcoded 1",
-    text: "Hello",
-  },
-  {
-    source: "yt",
-    name: "Hardcoded 1",
-    text: "Hello",
-  },
-  {
-    source: "tw",
-    name: "Hardcoded 1",
-    text: "Hello",
-  },
-  {
-    source: "tw",
-    name: "Hardcoded 1",
-    text: "Hello",
-  },
-  {
-    source: "yt",
-    name: "Hardcoded 1",
-    text: "Hello",
-  },
-  {
-    source: "tw",
-    name: "Hardcoded 1",
-    text: "Hello",
-  },
-  {
-    source: "tw",
-    name: "Hardcoded 1",
-    text: "Hello",
+    name: "Chat Server",
+    text: "Chat server is up and running!",
   },
 ].map(m => completeMsg(m as NewMessage));
 
-const maxMessageLifetime = 1000 * 60 * 5; // 5 minutes
+const maxMessageLifetime = 1000 * 60 * 2; // 2 minutes
 
 export async function pushMessage(newMessage: NewMessage) {
   let message = completeMsg(newMessage);
   messages.push(message);
 
-  // Keep only the last 100 messages
+  // Keep only the last 50 messages
   messages = messages.slice(-50);
 
   // TODO: Remove expired messages
