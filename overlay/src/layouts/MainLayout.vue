@@ -3,9 +3,7 @@
 </template>
 
 <script setup>
-
 defineOptions({
-  name: 'MainLayout'
-})
-
+  name: "MainLayout",
+});
 </script>
