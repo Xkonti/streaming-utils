@@ -1,36 +1,42 @@
 <template>
   <div class="row justify-center">
-    <div class="chatbox q-pa-xs">
-      <q-chat-message
+    <div class="chatbox q-pa-xs q-pt-md">
+      <transition
         v-for="message in messages"
         :key="message.id"
-        :text="[
-          `${message.name} (${message.secondsAgo} seconds ago):\n\n${message.text}`,
-        ]"
-        :sent="true"
-        bg-color="white"
-        class="chat-message"
-        size="10"
+        :appear="message.secondsAgo < 10"
+        enter-active-class="animated slideInRight"
+        leave-active-class="animated slideOutRight"
       >
-        <template v-slot:avatar>
-          <q-avatar
-            font-size="2.4rem"
-            text-color="white"
-            :color="message.source === 'tw' ? 'deep-purple-6' : 'red'"
-            :icon="message.source === 'tw' ? 'mdi-twitch' : 'mdi-youtube'"
-            class="q-message-avatar--sent"
-          />
-        </template>
-        <div>
-          <div class="row justify-between">
-            <span class="msg-author">@{{ message.name }}:</span>
-            <span class="msg-timestamp"
-              >{{ message.secondsAgo }} seconds ago</span
-            >
+        <q-chat-message
+          :text="[
+            `${message.name} (${message.secondsAgo} seconds ago):\n\n${message.text}`,
+          ]"
+          :sent="true"
+          bg-color="white"
+          class="chat-message"
+          size="10"
+        >
+          <template v-slot:avatar>
+            <q-avatar
+              font-size="2.4rem"
+              text-color="white"
+              :color="message.source === 'tw' ? 'deep-purple-6' : 'red'"
+              :icon="message.source === 'tw' ? 'mdi-twitch' : 'mdi-youtube'"
+              class="q-message-avatar--sent"
+            />
+          </template>
+          <div>
+            <div class="row justify-between">
+              <span class="msg-author">@{{ message.name }}:</span>
+              <span class="msg-timestamp"
+                >{{ message.secondsAgo }} seconds ago</span
+              >
+            </div>
+            <div class="msg-content">{{ message.text }}</div>
           </div>
-          <div class="msg-content">{{ message.text }}</div>
-        </div>
-      </q-chat-message>
+        </q-chat-message>
+      </transition>
       <div ref="chatboxend" />
     </div>
   </div>
