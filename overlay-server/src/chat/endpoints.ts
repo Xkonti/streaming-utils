@@ -1,5 +1,5 @@
 import { Elysia, Context } from "elysia";
-import { getAllMessages } from "./messages";
+import { getAllMessages, getMessagesAfterId } from "./messages";
 import { initTwitch, stopTwitch, isConnectedToTwitch } from "./twitch";
 import {
   initYoutube,
@@ -23,10 +23,10 @@ async function getAllMessagesHandler() {
   return getAllMessages();
 }
 
-async function getLastMessagesHandler() {
-  // TODO: Allow specifying number of seconds
-  // TODO: Properly request last messages from the messages store
-  return getAllMessages().slice(-10);
+async function getLastMessagesHandler(context: Context) {
+  const { query } = context;
+  const lastId = query.lastId;
+  return getMessagesAfterId(lastId);
 }
 
 async function getStatusHandler(context: Context) {
