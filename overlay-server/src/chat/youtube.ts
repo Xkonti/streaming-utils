@@ -1,106 +1,152 @@
 // From example: https://github.com/LuanRT/YouTube.js/blob/384b80ee41d7547a00d8dc17c50c8542629264b5/examples/livechat/index.ts
 
-import type { MockMessageHandlerRequester } from './messages';
+import type { MockMessageHandlerRequester } from "./messages";
 
-import { Innertube, UniversalCache, YTNodes } from 'youtubei.js';
-import { ChatAction } from 'youtubei.js/dist/src/parser/youtube/LiveChat';
+import { Innertube, UniversalCache, YTNodes } from "youtubei.js";
+import { ChatAction } from "youtubei.js/dist/src/parser/youtube/LiveChat";
 import { BareMessage, NewMessage, pushMessage } from "./messages";
 
-
 let livechat: any | null = null;
+let isConnected = false;
+let connectedVideoUrl: string = "";
 
-export async function initYoutube(videoId: string, MockMessageHandlerRequester?: MockMessageHandlerRequester) {
+export function isConnectedToYoutube() {
+  return isConnected;
+}
 
-    if (videoId == null || videoId === '') {
-        console.log("Skipping attaching to actual YouTube chat.");
-    } else {
-        await initLivechat(videoId);
-    }
+export function getConnectedVideoUrl() {
+  return connectedVideoUrl;
+}
 
-    // Mock message hook
-    if (MockMessageHandlerRequester == null) return;
+export async function initYoutube(
+  videoUrl: string,
+  MockMessageHandlerRequester?: MockMessageHandlerRequester
+) {
+  if (isConnected) throw new Error("YouTube chat is already connected");
+
+  // Extract video id from url. Example:
+  // https://youtube.com/live/0a4eJZ9LEWA?feature=share
+  // into
+  // 0a4eJZ9LEWA
+  connectedVideoUrl = videoUrl;
+  const videoId = videoUrl.split("/live/")[1].split("?")[0];
+  if (videoId == null || videoId === "") {
+    throw new Error("Invalid video url");
+  }
+
+  initLivechat(videoId);
+
+  // Mock message hook
+  if (MockMessageHandlerRequester != null) {
     MockMessageHandlerRequester((mockMessage: BareMessage) => {
-        let newMessage = mockMessage as NewMessage;
-        newMessage.source = "yt";
-        pushMessage(newMessage);
+      let newMessage = mockMessage as NewMessage;
+      newMessage.source = "yt";
+      pushMessage(newMessage);
     });
+  }
+
+  // Mark as connected
+  isConnected = true;
+}
+
+export function stopYoutube() {
+  if (!isConnected) throw new Error("YouTube chat is already disconnected");
+  stopLivechat();
+  isConnected = false;
 }
 
 async function initLivechat(videoId: string) {
-    try {
-        livechat = await getLivechat(videoId);
-    }
-    catch (error) {
-        throw error;
-    }
+  try {
+    livechat = await getLivechat(videoId);
+  } catch (error) {
+    throw error;
+  }
 
-    livechat.on('chat-update', async (action: ChatAction) => {
-        if (action.is(YTNodes.AddChatItemAction)) {
-            const item = action.as(YTNodes.AddChatItemAction).item;
+  livechat.on("chat-update", async (action: ChatAction) => {
+    if (action.is(YTNodes.AddChatItemAction)) {
+      const item = action.as(YTNodes.AddChatItemAction).item;
 
-            if (!item)
-                return console.info('Action did not have an item.', action);
+      if (!item) return console.info("Action did not have an item.", action);
 
-            const author = item.as(YTNodes.LiveChatTextMessage).author?.name.toString();
-            const text = item.as(YTNodes.LiveChatTextMessage).message.toString();
+      const author = item
+        .as(YTNodes.LiveChatTextMessage)
+        .author?.name.toString();
+      const text = item.as(YTNodes.LiveChatTextMessage).message.toString();
 
-            switch (item.type) {
-                case 'LiveChatTextMessage': {
+      switch (item.type) {
+        case "LiveChatTextMessage": {
+          const message: NewMessage = {
+            source: "yt",
+            name: author,
+            text: text,
+          };
+          await pushMessage(message);
 
-                    const message: NewMessage = {
-                        source: "yt",
-                        name: author,
-                        text: text,
-                    }
-                    await pushMessage(message);
-
-                    break;
-                }
-                case 'LiveChatPaidMessage': {
-                    const author = item.as(YTNodes.LiveChatPaidMessage).author?.name.toString();
-                    const text = item.as(YTNodes.LiveChatPaidMessage).message.toString();
-                    const purchaseAmount = item.as(YTNodes.LiveChatPaidSticker).purchase_amount;
-
-                    const message: NewMessage = {
-                        source: "yt",
-                        name: `${author} - 💵 $${purchaseAmount}`,
-                        text: `Purchased message: ${text}`,
-                    }
-                    await pushMessage(message);
-                    break;
-                }
-                case 'LiveChatPaidSticker': {
-                    const author = item.as(YTNodes.LiveChatPaidSticker).author?.name.toString();
-                    const text = "Purchased sticker";
-                    const purchaseAmount = item.as(YTNodes.LiveChatPaidSticker).purchase_amount;
-
-                    const message: NewMessage = {
-                        source: "yt",
-                        name: `${author} - 💵 $${purchaseAmount}`,
-                        text: text,
-                    }
-                    await pushMessage(message); 
-                    break;
-                }
-                default:
-                    console.debug(action);
-                    break;
-            }
+          break;
         }
-    });
+        case "LiveChatPaidMessage": {
+          const author = item
+            .as(YTNodes.LiveChatPaidMessage)
+            .author?.name.toString();
+          const text = item.as(YTNodes.LiveChatPaidMessage).message.toString();
+          const purchaseAmount = item.as(
+            YTNodes.LiveChatPaidSticker
+          ).purchase_amount;
 
-    livechat.start();
+          const message: NewMessage = {
+            source: "yt",
+            name: `${author} - 💵 $${purchaseAmount}`,
+            text: `Purchased message: ${text}`,
+          };
+          await pushMessage(message);
+          break;
+        }
+        case "LiveChatPaidSticker": {
+          const author = item
+            .as(YTNodes.LiveChatPaidSticker)
+            .author?.name.toString();
+          const text = "Purchased sticker";
+          const purchaseAmount = item.as(
+            YTNodes.LiveChatPaidSticker
+          ).purchase_amount;
+
+          const message: NewMessage = {
+            source: "yt",
+            name: `${author} - 💵 $${purchaseAmount}`,
+            text: text,
+          };
+          await pushMessage(message);
+          break;
+        }
+        default:
+          console.debug(action);
+          break;
+      }
+    }
+  });
+
+  livechat.start();
 }
 
 async function getLivechat(videoId: string) {
-    const yt = await Innertube.create({cache: new UniversalCache(false), generate_session_locally: true});
-    // TODO: Figure out how to get the current livestream id from the channel itself
-    const info = await yt.getInfo(videoId);
-    const livechat = info.getLiveChat();
-    if (livechat == null) {
-        throw new Error(`Failed to get the YouTube livechat for '${videoId}'`)
-    }
-    return livechat;
+  const yt = await Innertube.create({
+    cache: new UniversalCache(false),
+    generate_session_locally: true,
+  });
+  // TODO: Figure out how to get the current livestream id from the channel itself
+  const info = await yt.getInfo(videoId);
+  const livechat = info.getLiveChat();
+  if (livechat == null) {
+    throw new Error(`Failed to get the YouTube livechat for '${videoId}'`);
+  }
+  return livechat;
+}
+
+async function stopLivechat() {
+  if (livechat == null) throw new Error("YouTube chat is not connected");
+  livechat.stop();
+  livechat.removeAllListeners();
+  livechat = null;
 }
 
 // const search = {

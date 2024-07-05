@@ -9,7 +9,7 @@
         :sent="true"
         bg-color="white"
         class="chat-message"
-        style="font-size: 1.5rem;"
+        style="font-size: 1.5rem"
         size="10"
       >
         <template v-slot:avatar>
@@ -29,7 +29,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import {api} from "boot/axios.js";
+import { api } from "boot/axios.js";
 
 defineOptions({
   name: "TwitchChat",
@@ -72,9 +72,9 @@ const messages = computed(() => {
   });
 });
 
-const updateMessaged = async () => {
+const updateMessages = async () => {
   // Request new messages from the server and update the list
-  const response = await api.get("chat/messages/all")
+  const response = await api.get("chat/messages/all");
   if (response.status !== 200) {
     console.error("Error fetching messages", response.data);
   } else {
@@ -100,7 +100,7 @@ const updateMessaged = async () => {
 
 let interval;
 onMounted(() => {
-  interval = setInterval(updateMessaged, 1000);
+  interval = setInterval(updateMessages, 1000);
 });
 
 onBeforeUnmount(() => {
