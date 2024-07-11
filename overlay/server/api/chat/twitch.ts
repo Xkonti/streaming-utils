@@ -3,15 +3,21 @@ import type {NewMessage} from "./messages";
 import ComfyJS from "comfy.js";
 import { pushMessage } from "./messages";
 
-const channelName = "XkontiTech";
+let channelName = "";
 let isConnected = false;
 
 export function isConnectedToTwitch() {
   return isConnected;
 }
 
-export function initTwitch() {
+export function getTwitchChannel() {
+  return channelName;
+}
+
+export function initTwitch(channel: string) {
   if (isConnected) throw new Error("Twitch chat is already connected");
+
+  channelName = channel;
 
   // Setup events
   ComfyJS.onChat = async (user, message, flags, self, extra) => {

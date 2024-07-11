@@ -1,6 +1,7 @@
 <script setup>
 const isTwitchStateChanging = ref(true);
 const isConnectedToTwitch = ref(false);
+const twitchChannel = ref("");
 
 onMounted(async () => {
   // TODO: Request status from the server
@@ -20,6 +21,7 @@ onMounted(async () => {
       return;
     }
     isConnectedToTwitch.value = twitchStatus;
+    twitchChannel.value = data.value.twitchChannel;
     isTwitchStateChanging.value = false;
   });
 });
@@ -48,6 +50,12 @@ const twitchConnectBtnLabel = computed(() => {
   }
 });
 
+const canConnectToTwitch = computed(() => {
+  // If it's already connected, the buttin will display "Disconnect", so we should allow it
+  if (isConnectedToTwitch.value) return true;
+  return twitchChannel.value && twitchChannel.value.length >= 1;
+});
+
 const toggleTwitch = async () => {
   if (isTwitchStateChanging.value) return;
 
@@ -58,7 +66,7 @@ const toggleTwitch = async () => {
 async function connectTwitch() {
   isTwitchStateChanging.value = true;
   try {
-    await $fetch("/api/chat/twitch/start", {
+    await $fetch(`/api/chat/twitch/start?channel=${twitchChannel.value}`, {
       method: "POST",
     });
     isConnectedToTwitch.value = true;
@@ -98,10 +106,20 @@ async function disconnectTwitch() {
       </div>
     </q-card-section>
 
+    <q-card-section>
+      <q-input
+        v-model="twitchChannel"
+        :disable="isTwitchStateChanging || isConnectedToTwitch"
+        type="text"
+        label="Twitch channel name"
+      />
+    </q-card-section>
+
     <q-card-actions>
       <q-btn
         :loading="isTwitchStateChanging"
         :color="isConnectedToTwitch ? 'positive' : 'negative'"
+        :disable="!canConnectToTwitch"
         flat
         :label="twitchConnectBtnLabel"
         :icon="isConnectedToTwitch ? 'mdi-broadcast' : 'mdi-broadcast-off'"

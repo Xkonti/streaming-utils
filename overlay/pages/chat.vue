@@ -8,7 +8,7 @@ definePageMeta({
   <div class="overlay-container">
     <div></div>
 
-    <TwitchChat />
+    <Chat />
   </div>
 </template>
 

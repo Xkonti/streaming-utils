@@ -3,7 +3,14 @@ import { initTwitch } from "../twitch";
 export default defineEventHandler(async (event) => {
   console.log("Requested to start Twitch chat");
   try {
-    await initTwitch();
+    const channelName = getQuery(event)?.channel?.toString();
+    if (channelName == null || channelName === "") {
+      throw createError({
+        statusCode: 400,
+        message: "Missing channel query parameter",
+      });
+    }
+    await initTwitch(channelName);
   } catch (e) {
     console.log("Failed to initialize Twitch chat");
     throw createError({

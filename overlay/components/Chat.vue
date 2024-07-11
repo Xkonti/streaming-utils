@@ -5,7 +5,6 @@ import { nextTick } from "vue";
 const chatboxend = ref(null);
 const scrollToBottom = () => {
   if (chatboxend.value) {
-    console.log("Scrolling to bottom");
     chatboxend.value.scrollIntoView({ behavior: "smooth" });
   } else {
     console.log("No chatbox");
