@@ -7,3 +7,4 @@ yarn-error.log
 .dockerignore
 Dockerfile
 README.md
+build_and_publish.sh
