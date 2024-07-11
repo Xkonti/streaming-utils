@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@nuxt/eslint": "^0.3.13",
+    "@pinia/nuxt": "^0.5.1",
     "@quasar/extras": "^1.16.12",
     "comfy.js": "^1.1.16",
     "nuxt": "^3.12.3",

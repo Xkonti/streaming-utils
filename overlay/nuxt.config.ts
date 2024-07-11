@@ -3,7 +3,11 @@ export default defineNuxtConfig({
   compatibilityDate: "2024-04-03",
   devtools: { enabled: true },
   css: ["@/assets/custom.scss"],
-  modules: ["nuxt-quasar-ui", "@nuxt/eslint"],
+  modules: [
+    "@nuxt/eslint",
+    "@pinia/nuxt",
+    "nuxt-quasar-ui",
+  ],
 
   quasar: {
     plugins: [
