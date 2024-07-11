@@ -1,7 +1,8 @@
 {
-  "name": "nuxt-app",
+  "name": "chat-overlay",
   "private": true,
   "type": "module",
+  "author": "xkonti",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
