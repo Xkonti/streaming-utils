@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import type { EssentialLinkProps } from 'components/EssentialLink.vue';
 
 const essentialLinks: EssentialLinkProps[] = [
   {
