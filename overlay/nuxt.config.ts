@@ -17,5 +17,6 @@ export default defineNuxtConfig({
     extras: {
       font: "roboto-font",
     },
+    iconSet: "mdi-v7",
   },
 });

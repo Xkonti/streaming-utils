@@ -132,7 +132,7 @@ async function disconnectYoutube() {
         :disable="!canConnectToYoutube"
         flat
         :label="youtubeConnectBtnLabel"
-        :icon="isConnectedToYoutube ? 'wifi' : 'wifi_off'"
+        :icon="isConnectedToYoutube ? 'mdi-broadcast' : 'mdi-broadcast-off'"
         @click="toggleYoutube"
       />
     </q-card-actions>

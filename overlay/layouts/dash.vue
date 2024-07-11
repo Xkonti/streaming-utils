@@ -9,7 +9,7 @@ function toggleLeftDrawer() {
   <q-layout view="hHh lpR fFf">
     <q-header elevated class="bg-primary text-white">
       <q-toolbar>
-        <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
+        <q-btn dense flat round icon="mdi-hamburger" @click="toggleLeftDrawer" />
 
         <q-toolbar-title> Stream overlay dashboard </q-toolbar-title>
       </q-toolbar>

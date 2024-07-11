@@ -104,7 +104,7 @@ async function disconnectTwitch() {
         :color="isConnectedToTwitch ? 'positive' : 'negative'"
         flat
         :label="twitchConnectBtnLabel"
-        :icon="isConnectedToTwitch ? 'wifi' : 'wifi_off'"
+        :icon="isConnectedToTwitch ? 'mdi-broadcast' : 'mdi-broadcast-off'"
         @click="toggleTwitch"
       />
     </q-card-actions>
