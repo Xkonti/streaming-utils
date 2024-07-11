@@ -1,7 +1,19 @@
 <script setup>
+const connectionStatusStore = useConnectionStatusStore();
+
 const isTwitchStateChanging = ref(true);
-const isConnectedToTwitch = ref(false);
-const twitchChannel = ref("");
+const isConnectedToTwitch = computed({
+  get: () => connectionStatusStore.isTwitchConnected,
+  set: (value) => {
+    connectionStatusStore.isTwitchConnected = value;
+  },
+});
+const twitchChannel = computed({
+  get: () => connectionStatusStore.twitchChannel,
+  set: (value) => {
+    connectionStatusStore.twitchChannel = value;
+  },
+});
 
 onMounted(async () => {
   // TODO: Request status from the server
@@ -21,7 +33,8 @@ onMounted(async () => {
       return;
     }
     isConnectedToTwitch.value = twitchStatus;
-    twitchChannel.value = data.value.twitchChannel;
+    const channel = data.value.twitchChannel;
+    if (channel != null && channel != "") twitchChannel.value = channel;
     isTwitchStateChanging.value = false;
   });
 });

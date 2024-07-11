@@ -1,7 +1,19 @@
 <script setup>
+const connectionStatusStore = useConnectionStatusStore();
+
 const isYoutubeStateChanging = ref(true);
-const isConnectedToYoutube = ref(false);
-const youtubeVideoLink = ref("");
+const isConnectedToYoutube = computed({
+  get: () => connectionStatusStore.isYoutubeConnected,
+  set: (value) => {
+    connectionStatusStore.isYoutubeConnected = value;
+  },
+});
+const youtubeVideoLink = computed({
+  get: () => connectionStatusStore.youtubeVideoId,
+  set: (value) => {
+    connectionStatusStore.youtubeVideoId = value;
+  },
+});
 
 onMounted(async () => {
   nextTick(async () => {
@@ -20,7 +32,8 @@ onMounted(async () => {
       return;
     }
     isConnectedToYoutube.value = youtubeStatus;
-    youtubeVideoLink.value = data.value.youtubeUrl;
+    const url = data.value.youtubeUrl;
+    if (url != null && url != "") youtubeVideoLink.value = url;
     isYoutubeStateChanging.value = false;
   });
 });
