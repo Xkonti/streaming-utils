@@ -7,8 +7,4 @@
   </q-page>
 </template>
 
-<script setup>
-definePageMeta({
-  layout: 'dash'
-})
-</script>
+<script setup></script>

@@ -12,7 +12,6 @@ export default defineNuxtConfig({
 
   quasar: {
     plugins: [
-      "BottomSheet",
       "Dialog",
       "Loading",
       "LoadingBar",
@@ -21,7 +20,13 @@ export default defineNuxtConfig({
     ],
     extras: {
       font: "roboto-font",
+      fontIcons: ['material-icons'],
+      animations: 'all',
     },
-    iconSet: "mdi-v7",
+    iconSet: "mdi-v7", // https://pictogrammers.com/library/mdi/
+  },
+
+  routeRules: {
+    "/": { redirect: "/dashboard" },
   },
 });
